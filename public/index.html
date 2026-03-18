@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROTOCRISTALES - Escáner de Envíos</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .seller-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        #reader {
+            width: 100%;
+            max-width: 300px;
+            margin: 20px auto;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 3px solid #667eea;
+        }
+        
+        .input-group {
+            margin: 20px 0;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        
+        input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+        
+        .status-ready_to_ship { background: #17a2b8; }
+        .status-delivered { background: #28a745; }
+        .status-cancelled { background: #dc3545; }
+        
+        .info-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .label {
+            font-weight: 600;
+            color: #666;
+            min-width: 100px;
+        }
+        
+        .value {
+            color: #333;
+            flex: 1;
+        }
+        
+        .tracking {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 18px;
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 ROTOCRISTALES</h1>
+            <p>Escáner de Envíos Mercado Libre</p>
+        </div>
+        
+        <div class="seller-badge">
+            ✅ Vendedor: ROTOCRISTALES (ID: 2288203181)
+        </div>
+        
+        <div class="card">
+            <h2 style="text-align: center; color: #333; margin-bottom: 20px;">📷 Escanear Código QR</h2>
+            <div id="reader"></div>
+        </div>
+        
+        <div class="card">
+            <h2 style="text-align: center; color: #333; margin-bottom: 20px;">⌨️ Ingresar Número Manual</h2>
+            <div class="input-group">
+                <input type="text" id="envioId" placeholder="Ej: 46671562173" value="46671562173">
+                <button onclick="consultarEnvio()">🔍 Consultar Envío</button>
+            </div>
+        </div>
+        
+        <div id="resultado"></div>
+        
+        <div class="footer">
+            <p>Sistema exclusivo para envíos de ROTOCRISTALES</p>
+        </div>
+    </div>
+
+    <script>
+        async function consultarEnvio() {
+            const id = document.getElementById('envioId').value.replace(/\D/g, '');
+            
+            if (!id) {
+                alert('Ingresa un número de envío válido');
+                return;
+            }
+
+            document.getElementById('resultado').innerHTML = `
+                <div class="result-card">
+                    <div class="loader"></div>
+                    <p style="text-align: center; color: #666;">Consultando envío ${id}...</p>
+                </div>
+            `;
+
+            try {
+                // Llamar a nuestro propio backend (mismo servidor)
+                const response = await fetch(`/api/shipment/${id}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al consultar');
+                }
+
+                mostrarResultado(data);
+
+            } catch (error) {
+                document.getElementById('resultado').innerHTML = `
+                    <div class="result-card" style="background: #f8d7da; color: #721c24;">
+                        <strong>❌ Error:</strong> ${error.message}
+                        <hr style="margin: 15px 0;">
+                        <p style="margin:0;"><strong>🔧 Solución:</strong> Verifica que el backend esté funcionando</p>
+                    </div>
+                `;
+            }
+        }
+
+        function mostrarResultado(data) {
+            const destino = data.destination || {};
+            const direccion = destino.shipping_address || {};
+            
+            let statusClass = 'status-ready_to_ship';
+            if (data.status === 'delivered') statusClass = 'status-delivered';
+            if (data.status === 'cancelled') statusClass = 'status-cancelled';
+
+            document.getElementById('resultado').innerHTML = `
+                <div class="result-card">
+                    <div class="status-badge ${statusClass}">${data.status || 'DESCONOCIDO'}</div>
+                    
+                    <h2 style="color: #333; margin: 15px 0;">👤 ${destino.receiver_name || 'Sin nombre'}</h2>
+                    
+                    <div class="tracking">
+                        📦 ${data.tracking_number || 'Sin tracking'}
+                    </div>
+                    
+                    <div class="info-row">
+                        <span class="label">📍 Dirección:</span>
+                        <span class="value">${direccion.address_line || 'No disponible'}</span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span class="label">🏘️ Colonia:</span>
+                        <span class="value">${direccion.neighborhood?.name || 'No disponible'}</span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span class="label">🌆 Ciudad:</span>
+                        <span class="value">${direccion.city?.name || ''} ${direccion.state?.name || ''}</span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span class="label">📮 C.P.:</span>
+                        <span class="value">${direccion.zip_code || 'No disponible'}</span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span class="label">📞 Teléfono:</span>
+                        <span class="value">${destino.receiver_phone || 'No disponible'}</span>
+                    </div>
+                    
+                    ${direccion.comment ? `
+                        <div class="note">
+                            <strong>📝 Nota:</strong> ${direccion.comment}
+                        </div>
+                    ` : ''}
+                    
+                    <hr style="margin: 20px 0;">
+                    
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; color: #999;">
+                        <span>ID: ${data.id}</span>
+                        <span>✅ Vendedor: ROTOCRISTALES</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Inicializar escáner
+        try {
+            const scanner = new Html5Qrcode("reader");
+            scanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: 250 },
+                (text) => {
+                    document.getElementById('envioId').value = text.replace(/\D/g, '');
+                    consultarEnvio();
+                }
+            ).catch(() => {
+                document.getElementById("reader").innerHTML = '<p style="text-align:center; color:#999; padding:20px;">📷 Cámara no disponible</p>';
+            });
+        } catch (e) {}
+
+        // Enter para buscar
+        document.getElementById('envioId').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') consultarEnvio();
+        });
+
+        // Verificar backend al cargar
+        window.addEventListener('load', async () => {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                console.log('✅ Backend conectado', data);
+            } catch (e) {
+                console.error('❌ Backend no disponible');
+            }
+            
+            setTimeout(consultarEnvio, 500);
+        });
+    </script>
+</body>
+</html>
