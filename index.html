@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROTOCRISTALES - Escáner ML</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, sans-serif; }
+        body { background: #f0f2f5; margin: 0; }
+        header { background: #0d6efd; color: white; padding: 20px; font-size: 24px; text-align: center; font-weight: bold; }
+        .container { max-width: 600px; margin: 20px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        #reader { width: 100%; max-width: 300px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
+        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; margin: 10px 0; }
+        button { width: 100%; padding: 15px; background: #0d6efd; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .status { background: #17a2b8; color: white; padding: 8px 20px; border-radius: 20px; display: inline-block; margin-bottom: 15px; }
+        .info-row { padding: 8px 0; border-bottom: 1px solid #eee; }
+        .label { font-weight: bold; color: #555; min-width: 100px; display: inline-block; }
+        .seller-info { background: #e7f3ff; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; font-weight: bold; color: #0d6efd; border: 2px solid #0d6efd; }
+    </style>
+</head>
+<body>
+    <header>📦 ROTOCRISTALES - Escáner de Envíos</header>
+    <div class="container">
+        <div class="seller-info">✅ Vendedor: ROTOCRISTALES (ID: 2288203181)</div>
+        
+        <div class="card">
+            <h3>📷 Escanear código QR</h3>
+            <div id="reader"></div>
+        </div>
+        
+        <div class="card">
+            <h3>⌨️ Ingresar número manual</h3>
+            <input type="text" id="envioId" placeholder="Ej: 46671562173" value="46671562173">
+            <button onclick="consultarEnvio()">🔍 Consultar Envío</button>
+        </div>
+        
+        <div id="resultado"></div>
+    </div>
+
+    <script>
+        const TOKEN = "APP_USR-3794188853864564-031808-54e8914a3779c6ea6b76b486d2f76f09-2288203181";
+        const VENDEDOR_ID = 2288203181;
+
+        async function consultarEnvio() {
+            const id = document.getElementById('envioId').value.replace(/\D/g, '');
+            
+            if (!id) {
+                alert('Ingresa un número válido');
+                return;
+            }
+
+            document.getElementById('resultado').innerHTML = '<div class="card" style="text-align:center">Consultando...</div>';
+
+            try {
+                const response = await fetch(`https://api.mercadolibre.com/shipments/${id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${TOKEN}`,
+                        'x-format-new': 'true'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error('Error al consultar');
+                }
+
+                const destino = data.destination || {};
+                const direccion = destino.shipping_address || {};
+
+                document.getElementById('resultado').innerHTML = `
+                    <div class="card">
+                        <div class="status">${data.status || ''}</div>
+                        <h2 style="color:#0d6efd">👤 ${destino.receiver_name || 'Sin nombre'}</h2>
+                        <div class="info-row"><span class="label">📍 Dirección:</span> ${direccion.address_line || ''}</div>
+                        <div class="info-row"><span class="label">🏘️ Colonia:</span> ${direccion.neighborhood?.name || ''}</div>
+                        <div class="info-row"><span class="label">🌆 Ciudad:</span> ${direccion.city?.name || ''} ${direccion.state?.name || ''}</div>
+                        <div class="info-row"><span class="label">📮 CP:</span> ${direccion.zip_code || ''}</div>
+                        <hr>
+                        <div class="info-row"><span class="label">📦 Tracking:</span> <strong>${data.tracking_number || ''}</strong></div>
+                        ${direccion.comment ? `<div style="background:#fff3cd;padding:15px;margin-top:15px">📝 ${direccion.comment}</div>` : ''}
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('resultado').innerHTML = `<div class="card" style="background:#f8d7da;color:#721c24"><strong>❌ Error:</strong> ${error.message}</div>`;
+            }
+        }
+
+        try {
+            new Html5Qrcode("reader").start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: 250 },
+                text => {
+                    document.getElementById('envioId').value = text.replace(/\D/g, '');
+                    consultarEnvio();
+                }
+            ).catch(() => {
+                document.getElementById("reader").innerHTML = '<p style="text-align:center;color:#999">📷 Cámara no disponible</p>';
+            });
+        } catch (e) {}
+
+        document.getElementById('envioId').addEventListener('keypress', e => {
+            if (e.key === 'Enter') consultarEnvio();
+        });
+
+        window.addEventListener('load', () => setTimeout(consultarEnvio, 500));
+    </script>
+</body>
+</html>
